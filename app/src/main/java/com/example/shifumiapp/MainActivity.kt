@@ -20,6 +20,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.shifumiapp.ui.theme.ShiFuMiAppTheme
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.content.Context
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import kotlin.math.sqrt
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,9 +61,45 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         composable("play") { PlayScreen(navController) }
     }
 }
-
 @Composable
 fun PlayScreen(navController: NavHostController) {
+    val context = LocalContext.current
+    val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
+    val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+
+    var shakeCount by remember { mutableStateOf(0) }
+    var result by remember { mutableStateOf("") }
+
+    val sensorListener = remember {
+        object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                event?.let {
+                    val angularSpeed = sqrt(it.values[0] * it.values[0] + it.values[1] * it.values[1] + it.values[2] * it.values[2])
+
+                    if (angularSpeed > 5) {
+                        shakeCount++
+                    }
+
+                    if (shakeCount >= 3) {
+                        val options = listOf("pierre", "feuille", "ciseau")
+                        result = options[Random.nextInt(options.size)]
+                        shakeCount = 0
+                    }
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+    }
+
+    DisposableEffect(Unit) {
+        sensorManager.registerListener(sensorListener, gyroscope, SensorManager.SENSOR_DELAY_UI)
+
+        onDispose {
+            sensorManager.unregisterListener(sensorListener)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -63,10 +111,26 @@ fun PlayScreen(navController: NavHostController) {
                 .clickable { navController.navigate("home") }
                 .padding(8.dp)
         )
+        Text(text = "Faites 3 secousses pour jouer !")
+        if (result.isNotEmpty()) {
+            Text(text = "Résultat: $result")
+            val imageRes = when (result) {
+                "pierre" -> R.drawable.pierre
+                "feuille" -> R.drawable.feuille
+                "ciseau" -> R.drawable.ciseau
+                else -> null
+            }
 
+            imageRes?.let {
+                Image(
+                    painter = painterResource(id = it),
+                    contentDescription = "Résultat: $result",
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     }
 }
-
 
 
 @Composable
