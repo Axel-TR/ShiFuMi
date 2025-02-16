@@ -45,11 +45,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import kotlin.math.sqrt
 import kotlin.random.Random
+
+val dimitri = FontFamily(
+    Font(R.font.dimis___)
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -161,11 +168,15 @@ fun HomeScreen(navController: NavHostController) {
     ) {
         Text(
             text = "PIERRE\nNEUILLE\nCISEAU",
-            fontSize = 32.sp,
+            fontSize = 48.sp,
+            fontFamily = dimitri,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             color = Color.Black,
-            modifier = Modifier.padding(top = 100.dp)
+            style = TextStyle(
+                lineHeight = 43.sp
+            ),
+            modifier = Modifier.padding(top = 60.dp)
         )
         Spacer(modifier = Modifier.height(40.dp))
         Image(
@@ -236,7 +247,10 @@ fun HomeScreen(navController: NavHostController) {
                     .background(Color.White)
                     .padding(12.dp)
             ) {
-                Text(text = "JOUER", fontSize = 24.sp, color = Color.Black)
+                Text(text = "JOUER",
+                    fontSize = 34.sp,
+                    color = Color.Black,
+                    fontFamily = dimitri,)
             }
         }
     }
