@@ -25,11 +25,29 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.content.Context
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -132,24 +150,95 @@ fun PlayScreen(navController: NavHostController) {
     }
 }
 
-
 @Composable
 fun HomeScreen(navController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(Color(0xFFFFEA00))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Bienvenue",
-            modifier = Modifier
-                .padding(8.dp)
+            text = "PIERRE\nNEUILLE\nCISEAU",
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            color = Color.Black,
+            modifier = Modifier.padding(top = 100.dp)
         )
-        Text(
-            text = "Jouer",
-            modifier = Modifier
-                .clickable{navController.navigate("play")}
+        Spacer(modifier = Modifier.height(40.dp))
+        Image(
+            painter = painterResource(id = R.drawable.pierre),
+            contentDescription = "Pierre",
+            modifier = Modifier.size(124.dp)
         )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.feuille),
+                contentDescription = "Feuille",
+                modifier = Modifier.size(140.dp)
+            )
+            Image(
+                painter = painterResource(id = R.drawable.ciseau),
+                contentDescription = "Ciseau",
+                modifier = Modifier.size(140.dp)
+            )
+
+        }
+        Spacer(modifier = Modifier.height(60.dp))
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .width(200.dp)
+                .height(75.dp)
+                .clip(GenericShape { size, _ ->
+                    val width = size.width
+                    val height = size.height
+                    moveTo(width * 0.1f, 0f)
+                    lineTo(width * 0.9f, 0f)
+                    lineTo(width, height * 0.2f)
+                    lineTo(width, height * 0.8f)
+                    lineTo(width * 0.9f, height)
+                    lineTo(width * 0.1f, height)
+                    lineTo(0f, height * 0.8f)
+                    lineTo(0f, height * 0.2f)
+                    close()
+                })
+                .background(Color.Black)
+                .clickable {
+                    navController.navigate("play")
+                }
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .width(186.dp)
+                    .height(62.dp)
+                    .clip(GenericShape { size, _ ->
+                        val width = size.width
+                        val height = size.height
+                        moveTo(width * 0.09f, 0f)
+                        lineTo(width * 0.91f, 0f)
+                        lineTo(width, height * 0.2f)
+                        lineTo(width, height * 0.8f)
+                        lineTo(width * 0.91f, height)
+                        lineTo(width * 0.09f, height)
+                        lineTo(0f, height * 0.8f)
+                        lineTo(0f, height * 0.2f)
+                        close()
+                    })
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
+                Text(text = "JOUER", fontSize = 24.sp, color = Color.Black)
+            }
+        }
     }
 }
 
