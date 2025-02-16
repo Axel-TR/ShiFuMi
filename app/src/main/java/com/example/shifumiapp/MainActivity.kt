@@ -128,17 +128,65 @@ fun PlayScreen(navController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(Color(0xFFFFEA00))
+
     ) {
-        Text(
-            text = "Retour",
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .clickable { navController.navigate("home") }
-                .padding(8.dp)
-        )
-        Text(text = "Faites 3 secousses pour jouer !")
+                .width(200.dp)
+                .height(75.dp)
+                .clip(GenericShape { size, _ ->
+                    val width = size.width
+                    val height = size.height
+                    moveTo(width * 0f, 0f)
+                    lineTo(width * 0.9f, 0f)
+                    lineTo(width, height * 0.2f)
+                    lineTo(width, height * 0.8f)
+                    lineTo(width * 0.9f, height)
+                    lineTo(width * 0f, height)
+                    lineTo(0f, height * 0.8f)
+                    lineTo(0f, height * 0.2f)
+                    close()
+                })
+                .background(Color.Black)
+                .clickable {
+                    navController.navigate("play")
+                }
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .width(186.dp)
+                    .height(62.dp)
+                    .clip(GenericShape { size, _ ->
+                        val width = size.width
+                        val height = size.height
+                        moveTo(width * 0.0f, 0f)
+                        lineTo(width * 0.91f, 0f)
+                        lineTo(width, height * 0.2f)
+                        lineTo(width, height * 0.8f)
+                        lineTo(width * 0.91f, height)
+                        lineTo(width * 0.0f, height)
+                        lineTo(0f, height * 0.8f)
+                        lineTo(0f, height * 0.2f)
+                        close()
+                    })
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
+                Text(text = "RETOUR",
+                    fontSize = 34.sp,
+                    color = Color.Black,
+                    fontFamily = dimitri,)
+            }
+        }
+
         if (result.isNotEmpty()) {
-            Text(text = "Résultat: $result")
+
             val imageRes = when (result) {
                 "pierre" -> R.drawable.pierre
                 "feuille" -> R.drawable.feuille
@@ -147,6 +195,7 @@ fun PlayScreen(navController: NavHostController) {
             }
 
             imageRes?.let {
+                Spacer(modifier = Modifier.height(100.dp))
                 Image(
                     painter = painterResource(id = it),
                     contentDescription = "Résultat: $result",
