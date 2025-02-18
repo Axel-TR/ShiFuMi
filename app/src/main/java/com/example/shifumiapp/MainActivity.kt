@@ -105,7 +105,7 @@ fun PlayScreen(navController: NavHostController) {
                         shakeCount++
                     }
 
-                    if (shakeCount >= 3) {
+                    if (shakeCount >= 6) {
                         val options = listOf("pierre", "feuille", "ciseau")
                         result = options[Random.nextInt(options.size)]
                         shakeCount = 0
@@ -154,7 +154,7 @@ fun PlayScreen(navController: NavHostController) {
                 })
                 .background(Color.Black)
                 .clickable {
-                    navController.navigate("play")
+                    navController.navigate("home")
                 }
         ) {
             Box(
