@@ -92,7 +92,7 @@ fun PlayScreen(navController: NavHostController) {
     val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
-    var shakeCount by remember { mutableStateOf(0) }
+    var shakeCount by remember { mutableIntStateOf(0) }
     var result by remember { mutableStateOf("") }
 
     val sensorListener = remember {
@@ -105,7 +105,7 @@ fun PlayScreen(navController: NavHostController) {
                         shakeCount++
                     }
 
-                    if (shakeCount >= 3) {
+                    if (shakeCount >= 6) {
                         val options = listOf("pierre", "feuille", "ciseau")
                         result = options[Random.nextInt(options.size)]
                         shakeCount = 0
@@ -154,7 +154,7 @@ fun PlayScreen(navController: NavHostController) {
                 })
                 .background(Color.Black)
                 .clickable {
-                    navController.navigate("play")
+                    navController.navigate("home")
                 }
         ) {
             Box(
