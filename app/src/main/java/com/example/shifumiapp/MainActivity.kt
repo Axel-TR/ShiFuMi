@@ -83,7 +83,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         modifier = modifier
     ) {
         composable("home") { HomeScreen(navController) }
-        composable("play") { PlayScreen(navController) }
+        composable("playSolo") { PlayScreen(navController) }
+        composable("gamemode") { GamemodeScreen(navController) }
     }
 }
 @Composable
@@ -205,7 +206,125 @@ fun PlayScreen(navController: NavHostController) {
         }
     }
 }
+@Composable
+fun PlayBotScreen(navController: NavHostController) {
+    val context = LocalContext.current
+    val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
+    val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
+    var shakeCount by remember { mutableIntStateOf(0) }
+    var result by remember { mutableStateOf("") }
+
+    val sensorListener = remember {
+        object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                event?.let {
+                    val angularSpeed = sqrt(it.values[0] * it.values[0] + it.values[1] * it.values[1] + it.values[2] * it.values[2])
+
+                    if (angularSpeed > 5) {
+                        shakeCount++
+                    }
+
+                    if (shakeCount >= 6) {
+                        val options = listOf("pierre", "feuille", "ciseau")
+                        result = options[Random.nextInt(options.size)]
+                        shakeCount = 0
+                    }
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+    }
+
+    DisposableEffect(Unit) {
+        sensorManager.registerListener(sensorListener, gyroscope, SensorManager.SENSOR_DELAY_UI)
+
+        onDispose {
+            sensorManager.unregisterListener(sensorListener)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFFFEA00))
+
+    ) {
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .width(200.dp)
+                .height(75.dp)
+                .clip(GenericShape { size, _ ->
+                    val width = size.width
+                    val height = size.height
+                    moveTo(width * 0f, 0f)
+                    lineTo(width * 0.9f, 0f)
+                    lineTo(width, height * 0.2f)
+                    lineTo(width, height * 0.8f)
+                    lineTo(width * 0.9f, height)
+                    lineTo(width * 0f, height)
+                    lineTo(0f, height * 0.8f)
+                    lineTo(0f, height * 0.2f)
+                    close()
+                })
+                .background(Color.Black)
+                .clickable {
+                    navController.navigate("home")
+                }
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .width(186.dp)
+                    .height(62.dp)
+                    .clip(GenericShape { size, _ ->
+                        val width = size.width
+                        val height = size.height
+                        moveTo(width * 0.0f, 0f)
+                        lineTo(width * 0.91f, 0f)
+                        lineTo(width, height * 0.2f)
+                        lineTo(width, height * 0.8f)
+                        lineTo(width * 0.91f, height)
+                        lineTo(width * 0.0f, height)
+                        lineTo(0f, height * 0.8f)
+                        lineTo(0f, height * 0.2f)
+                        close()
+                    })
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
+                Text(text = "RETOUR",
+                    fontSize = 34.sp,
+                    color = Color.Black,
+                    fontFamily = dimitri,)
+            }
+        }
+
+        if (result.isNotEmpty()) {
+
+            val imageRes = when (result) {
+                "pierre" -> R.drawable.pierre
+                "feuille" -> R.drawable.feuille
+                "ciseau" -> R.drawable.ciseau
+                else -> null
+            }
+
+            imageRes?.let {
+                Spacer(modifier = Modifier.height(100.dp))
+                Image(
+                    painter = painterResource(id = it),
+                    contentDescription = "Résultat: $result",
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
 @Composable
 fun HomeScreen(navController: NavHostController) {
     Column(
@@ -272,7 +391,7 @@ fun HomeScreen(navController: NavHostController) {
                 })
                 .background(Color.Black)
                 .clickable {
-                    navController.navigate("play")
+                    navController.navigate("gamemode")
                 }
         ) {
             Box(
@@ -305,4 +424,186 @@ fun HomeScreen(navController: NavHostController) {
     }
 }
 
+@Composable
+fun GamemodeScreen(navController: NavHostController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFFFEA00))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = "GAME\nMODE",
+            fontSize = 56.sp,
+            fontFamily = dimitri,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            color = Color.Black,
+            style = TextStyle(
+                lineHeight = 56.sp
+            ),
+            modifier = Modifier.padding(top = 60.dp)
+        )
+        Spacer(modifier = Modifier.height(40.dp))
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .padding(vertical= 40.dp)
+                .width(200.dp)
+                .height(75.dp)
+                .clip(GenericShape { size, _ ->
+                    val width = size.width
+                    val height = size.height
+                    moveTo(width * 0.1f, 0f)
+                    lineTo(width * 0.9f, 0f)
+                    lineTo(width, height * 0.2f)
+                    lineTo(width, height * 0.8f)
+                    lineTo(width * 0.9f, height)
+                    lineTo(width * 0.1f, height)
+                    lineTo(0f, height * 0.8f)
+                    lineTo(0f, height * 0.2f)
+                    close()
+                })
+                .background(Color.Black)
+                .clickable {
+                    navController.navigate("playSolo")
+                }
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .width(186.dp)
+                    .height(62.dp)
+                    .clip(GenericShape { size, _ ->
+                        val width = size.width
+                        val height = size.height
+                        moveTo(width * 0.09f, 0f)
+                        lineTo(width * 0.91f, 0f)
+                        lineTo(width, height * 0.2f)
+                        lineTo(width, height * 0.8f)
+                        lineTo(width * 0.91f, height)
+                        lineTo(width * 0.09f, height)
+                        lineTo(0f, height * 0.8f)
+                        lineTo(0f, height * 0.2f)
+                        close()
+                    })
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "SOLO",
+                    fontSize = 34.sp,
+                    color = Color.Black,
+                    fontFamily = dimitri,
+                )
+            }
+        }
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .width(200.dp)
+                .height(75.dp)
+                .clip(GenericShape { size, _ ->
+                    val width = size.width
+                    val height = size.height
+                    moveTo(width * 0.1f, 0f)
+                    lineTo(width * 0.9f, 0f)
+                    lineTo(width, height * 0.2f)
+                    lineTo(width, height * 0.8f)
+                    lineTo(width * 0.9f, height)
+                    lineTo(width * 0.1f, height)
+                    lineTo(0f, height * 0.8f)
+                    lineTo(0f, height * 0.2f)
+                    close()
+                })
+                .background(Color.Black)
+                .clickable {
+                    navController.navigate("playBot")
+                }
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .width(186.dp)
+                    .height(62.dp)
+                    .clip(GenericShape { size, _ ->
+                        val width = size.width
+                        val height = size.height
+                        moveTo(width * 0.09f, 0f)
+                        lineTo(width * 0.91f, 0f)
+                        lineTo(width, height * 0.2f)
+                        lineTo(width, height * 0.8f)
+                        lineTo(width * 0.91f, height)
+                        lineTo(width * 0.09f, height)
+                        lineTo(0f, height * 0.8f)
+                        lineTo(0f, height * 0.2f)
+                        close()
+                    })
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "VS ORDI",
+                    fontSize = 34.sp,
+                    color = Color.Black,
+                    fontFamily = dimitri,
+                )
+            }
+        }
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .padding(vertical = 40.dp)
+                .width(200.dp)
+                .height(75.dp)
+                .clip(GenericShape { size, _ ->
+                    val width = size.width
+                    val height = size.height
+                    moveTo(width * 0.1f, 0f)
+                    lineTo(width * 0.9f, 0f)
+                    lineTo(width, height * 0.2f)
+                    lineTo(width, height * 0.8f)
+                    lineTo(width * 0.9f, height)
+                    lineTo(width * 0.1f, height)
+                    lineTo(0f, height * 0.8f)
+                    lineTo(0f, height * 0.2f)
+                    close()
+                })
+                .background(Color.Black)
+                .clickable {
+                    navController.navigate("home")
+                }
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .width(186.dp)
+                    .height(62.dp)
+                    .clip(GenericShape { size, _ ->
+                        val width = size.width
+                        val height = size.height
+                        moveTo(width * 0.09f, 0f)
+                        lineTo(width * 0.91f, 0f)
+                        lineTo(width, height * 0.2f)
+                        lineTo(width, height * 0.8f)
+                        lineTo(width * 0.91f, height)
+                        lineTo(width * 0.09f, height)
+                        lineTo(0f, height * 0.8f)
+                        lineTo(0f, height * 0.2f)
+                        close()
+                    })
+                    .background(Color.White)
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "RETOUR",
+                    fontSize = 34.sp,
+                    color = Color.Black,
+                    fontFamily = dimitri,
+                )
+            }
+        }
 
+    }
+}
