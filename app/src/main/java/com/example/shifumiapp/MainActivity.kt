@@ -28,12 +28,14 @@ import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.GenericShape
@@ -42,6 +44,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -85,6 +89,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         composable("home") { HomeScreen(navController) }
         composable("playSolo") { PlayScreen(navController) }
         composable("gamemode") { GamemodeScreen(navController) }
+        composable("playBot") { PlayBotScreen(navController) }
     }
 }
 @Composable
@@ -213,21 +218,21 @@ fun PlayBotScreen(navController: NavHostController) {
     val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
     var shakeCount by remember { mutableIntStateOf(0) }
-    var result by remember { mutableStateOf("") }
+    var resultBot by remember { mutableStateOf("") }
+    var resultUser by remember { mutableStateOf("") }
 
     val sensorListener = remember {
         object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
                 event?.let {
                     val angularSpeed = sqrt(it.values[0] * it.values[0] + it.values[1] * it.values[1] + it.values[2] * it.values[2])
-
                     if (angularSpeed > 5) {
                         shakeCount++
                     }
-
                     if (shakeCount >= 6) {
                         val options = listOf("pierre", "feuille", "ciseau")
-                        result = options[Random.nextInt(options.size)]
+                        resultBot = options.random()
+                        resultUser = options.random()
                         shakeCount = 0
                     }
                 }
@@ -239,12 +244,30 @@ fun PlayBotScreen(navController: NavHostController) {
 
     DisposableEffect(Unit) {
         sensorManager.registerListener(sensorListener, gyroscope, SensorManager.SENSOR_DELAY_UI)
-
         onDispose {
             sensorManager.unregisterListener(sensorListener)
         }
     }
 
+    val resultText = if (resultBot.isNotEmpty() && resultUser.isNotEmpty()) {
+        val outcome = when {
+            resultUser == resultBot -> "ÉGALITÉ"
+            (resultUser == "pierre" && resultBot == "ciseau") ||
+                    (resultUser == "feuille" && resultBot == "pierre") ||
+                    (resultUser == "ciseau" && resultBot == "feuille") -> "VICTOIRE"
+            else -> "DÉFAITE"
+        }
+        outcome
+    } else {
+        "SECOUEZ !!"
+    }
+
+    fun getImageFromResult(result: String): Int? = when (result) {
+        "pierre" -> R.drawable.pierre_no_bg
+        "feuille" -> R.drawable.feuille_no_bg
+        "ciseau" -> R.drawable.ciseau_no_bg
+        else -> null
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -291,38 +314,153 @@ fun PlayBotScreen(navController: NavHostController) {
                         lineTo(width, height * 0.8f)
                         lineTo(width * 0.91f, height)
                         lineTo(width * 0.0f, height)
-                        lineTo(0f, height * 0.8f)
-                        lineTo(0f, height * 0.2f)
+                        lineTo(-width *0.05f, height * 0.8f)
                         close()
                     })
                     .background(Color.White)
                     .padding(12.dp)
             ) {
-                Text(text = "RETOUR",
+                Text(text = "QUITTER",
                     fontSize = 34.sp,
                     color = Color.Black,
                     fontFamily = dimitri,)
             }
         }
 
-        if (result.isNotEmpty()) {
 
-            val imageRes = when (result) {
-                "pierre" -> R.drawable.pierre
-                "feuille" -> R.drawable.feuille
-                "ciseau" -> R.drawable.ciseau
-                else -> null
-            }
+        Spacer(modifier = Modifier.height(100.dp))
+        Box(
+            modifier = Modifier
+                .width(260.dp)
+                .height(200.dp)
+                .clip(GenericShape { size, _ ->
+                    val width = size.width
+                    val height = size.height
+                    moveTo(width * 0.0f, 0f)
+                    lineTo(x = width, y = 0f)
+                    lineTo(x = width*0.65f, y = height)
+                    lineTo(x = 0.0f, y = height)
+                    close()
+                })
+                .background(Color.Black)
+                .padding(bottom = 8.dp, top = 8.dp, end = 12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(260.dp)
+                    .height(200.dp)
+                    .clip(GenericShape { size, _ ->
+                        val width = size.width
+                        val height = size.height
+                        moveTo(width * 0.0f, 0f)
+                        lineTo(x = width, y = 0f)
+                        lineTo(x = width*0.66f, y = height)
+                        lineTo(x = 0.0f, y = height)
+                        close()
+                    })
 
-            imageRes?.let {
-                Spacer(modifier = Modifier.height(100.dp))
+                    .background(Color.White)
+
+            ){
+                Text(text = "BOT",
+                    Modifier.offset(x = 45.dp,y=(130.dp)),
+                    fontSize = 42.sp,
+                    color = Color.Black,
+                    fontFamily = dimitri,)
+                val botImage = getImageFromResult(resultBot) ?: R.drawable.bot_img
                 Image(
-                    painter = painterResource(id = it),
-                    contentDescription = "Résultat: $result",
-                    modifier = Modifier.fillMaxWidth()
+                    painter = painterResource(id = botImage),
+                    contentDescription = "bot",
+                    modifier = Modifier.size(140.dp).offset(x = 20.dp)
                 )
             }
         }
+
+        Box(
+            modifier = Modifier
+                .offset(y = (-75).dp)
+                .align(Alignment.End)
+                .width(260.dp)
+                .height(200.dp)
+                .clip(GenericShape { size, _ ->
+                    val width = size.width
+                    val height = size.height
+                    moveTo(width*0.35f, 0f)
+                    lineTo(x = width, y = 0f)
+                    lineTo(x = width, y = height)
+                    lineTo(x = 0f, y = height)
+                    close()
+                })
+                .background(Color.Black)
+                .padding(bottom = 8.dp, top = 8.dp, start = 12.dp)
+        ){
+            Box(
+                modifier = Modifier
+                    .width(260.dp)
+                    .height(200.dp)
+                    .clip(GenericShape { size, _ ->
+                        val width = size.width
+                        val height = size.height
+                        moveTo(width*0.34f, 0f)
+                        lineTo(x = width, y = 0f)
+                        lineTo(x = width, y = height)
+                        lineTo(x = 0f, y = height)
+                        close()
+                    })
+                    .background(Color.White)
+
+            ){
+                Text(text = "VOUS",
+                    Modifier.offset(x = 50.dp,y=(130.dp)),
+                    fontSize = 42.sp,
+                    color = Color.Black,
+                    fontFamily = dimitri,)
+                val userImage = getImageFromResult(resultUser) ?: R.drawable.pingu_img
+                Image(
+                    painter = painterResource(id = userImage),
+                    contentDescription = "vous",
+                    modifier = Modifier.size(140.dp).offset(x = 80.dp)
+                )
+            }
+        }
+        Spacer(Modifier.height(60.dp))
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .width(400.dp)
+                .height(70.dp)
+                .background(Color.White)
+                .drawBehind {
+                    val strokeWidth = 8.dp.toPx()
+                    val width = size.width
+                    val height = size.height
+
+                    drawLine(
+                        color = Color.Black,
+                        start = Offset(0f, 0f),
+                        end = Offset(width, 0f),
+                        strokeWidth = strokeWidth
+                    )
+
+                    drawLine(
+                        color = Color.Black,
+                        start = Offset(0f, height),
+                        end = Offset(width, height),
+                        strokeWidth = strokeWidth
+                    )
+                }
+        ) {
+            Text(
+                text = resultText,
+                fontSize = 42.sp,
+                color = Color.Black,
+                fontFamily = dimitri,
+            )
+        }
+
+
+
+
     }
 }
 @Composable
@@ -421,6 +559,8 @@ fun HomeScreen(navController: NavHostController) {
                     fontFamily = dimitri,)
             }
         }
+
+
     }
 }
 
