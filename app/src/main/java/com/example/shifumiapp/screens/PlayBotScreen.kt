@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.media.MediaPlayer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +25,7 @@ import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,19 +42,40 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.shifumiapp.GamePreferences
 import com.example.shifumiapp.GameViewModel
 import com.example.shifumiapp.R
 import com.example.shifumiapp.dimitri
 import kotlin.math.sqrt
 
 
+fun playWinStreakSound(context: Context) {
+    val mediaPlayer = MediaPlayer.create(context, R.raw.victorysound)
+    mediaPlayer?.start()
+
+}
 @Composable
 fun PlayBotScreen(navController: NavHostController, gameViewModel: GameViewModel) {
     val context = LocalContext.current
     val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+    val gamePreferences = GamePreferences(context)
 
     var shakeCount by remember { mutableIntStateOf(0) }
+    val winstreakNumber = remember { mutableStateOf(gamePreferences.getWinStreak()) }
+    val bestWinStreak = remember { mutableStateOf(gamePreferences.getBestWinStreak()) }
+    LaunchedEffect(winstreakNumber.value) {
+        gamePreferences.setWinStreak(winstreakNumber.value)
+        if (winstreakNumber.value > bestWinStreak.value) {
+
+            bestWinStreak.value = winstreakNumber.value
+            gamePreferences.setBestWinStreak(bestWinStreak.value)
+
+            playWinStreakSound(context)
+        }
+    }
+
+
     var resultBot by remember { mutableStateOf("") }
     var resultUser by remember { mutableStateOf("") }
     var played by remember { mutableStateOf(false) }
@@ -77,6 +100,22 @@ fun PlayBotScreen(navController: NavHostController, gameViewModel: GameViewModel
                             shakeCount = 0
                             userChoice = null
                             played = true
+                            val outcome = when {
+                                resultUser == resultBot -> "ÉGALITÉ"
+                                (resultUser == "pierre" && resultBot == "ciseau") ||
+                                        (resultUser == "feuille" && resultBot == "pierre") ||
+                                        (resultUser == "ciseau" && resultBot == "feuille") -> "VICTOIRE"
+                                else -> "DÉFAITE"
+                            }
+                            when (outcome) {
+                                "VICTOIRE" -> {
+                                    winstreakNumber.value++
+                                }
+                                "DÉFAITE" -> {
+                                    winstreakNumber.value = 0
+                                }
+                            }
+                            gamePreferences.setWinStreak(winstreakNumber.value)
                         }
 
                     }
@@ -102,6 +141,7 @@ fun PlayBotScreen(navController: NavHostController, gameViewModel: GameViewModel
                     (resultUser == "ciseau" && resultBot == "feuille") -> "VICTOIRE"
             else -> "DÉFAITE"
         }
+
         outcome
     } else {
         "SECOUEZ !!"
@@ -173,7 +213,49 @@ fun PlayBotScreen(navController: NavHostController, gameViewModel: GameViewModel
         }
 
 
-        Spacer(modifier = Modifier.height(100.dp))
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .width(240.dp)
+                    .height(60.dp)
+                    .clip(GenericShape { size, _ ->
+                        val width = size.width
+                        val height = size.height
+                        moveTo(width*0.25f, 0f)
+                        lineTo(x = width, y = 0f)
+                        lineTo(x = width, y = height)
+                        lineTo(x = 0f, y = height)
+                        close()
+                    })
+                    .background(Color.Black)
+                    .padding(bottom = 8.dp, top = 8.dp, start = 8.dp)
+            ){
+                Box(
+                    modifier = Modifier
+                        .width(240.dp)
+                        .height(60.dp)
+                        .clip(GenericShape { size, _ ->
+                            val width = size.width
+                            val height = size.height
+                            moveTo(width*0.24f, 0f)
+                            lineTo(x = width, y = 0f)
+                            lineTo(x = width, y = height)
+                            lineTo(x = width*0.05f, y = height)
+                            close()
+                        })
+                        .background(Color.White)
+
+                ){
+                    Text(text = "WINSTREAK : ${winstreakNumber.value}",
+                        modifier = Modifier.offset(x = 36.dp,y=(6.dp)),
+                        fontSize = 24.sp,
+                        color = Color.Black,
+                        fontFamily = dimitri)
+                }
+            }
+
+        Spacer(modifier = Modifier.height(30.dp))
         Box(
             modifier = Modifier
                 .width(260.dp)
